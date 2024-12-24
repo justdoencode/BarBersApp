@@ -1,13 +1,16 @@
 
 import React from "react";
 import { Text, View } from "react-native";
+import { Formik } from "formik";
+import auth from "@react-native-firebase/auth"
+import firestore from "@react-native-firebase/firestore"
 
 import styles from "./CustomerSignInPage.style"
-import { Formik } from "formik";
 import Input from "../../../components/Input/Input";
 import Button from "../../../components/Button/Button";
+import { showMessage } from "react-native-flash-message";
 
-const CustomerSignInPage = () => {
+const CustomerSignInPage = ({navigation}) => {
     const customerData = {
         email: "",
         password: "",
@@ -16,6 +19,35 @@ const CustomerSignInPage = () => {
         city: "",
         district: "",
     }
+
+    async function handleFormSubmit(formValues, {resetForm}) {
+        try {
+            const userCredential = await auth()
+                .createUserWithEmailAndPassword(formValues.email, formValues.password)
+            const user=userCredential.user;
+
+            await firestore().collection("users").doc(user.uid).set({
+                email:formValues.email,
+                role:"customer",
+                createdAt:firestore.FieldValue.serverTimestamp(),
+            })
+
+            showMessage({
+                message:"Kullanıcı Başarıyla Kaydedildi",
+                type:"success",
+            })
+            navigation.navigate("CustomerLoginPage")
+            resetForm();
+            
+        } catch (error) {
+            console.log(error)
+            showMessage({
+                message:"Kullanıcı Kaydedilirken Bir Hata Oluştu!",
+                type:"danger",
+            })
+        }
+    }
+
     return (
         <View style={styles.conteiner}>
 
@@ -26,7 +58,7 @@ const CustomerSignInPage = () => {
             <View style={styles.input_conteiner}>
                 <Formik
                     initialValues={customerData}
-                    onSubmit={null}>
+                    onSubmit={handleFormSubmit}>
                     {({ values, handleChange, handleSubmit }) => (
                         <>
                             <Input

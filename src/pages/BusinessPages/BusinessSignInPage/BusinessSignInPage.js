@@ -2,12 +2,19 @@
 import React from "react";
 import { Text, View } from "react-native";
 
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore"
+import { showMessage } from "react-native-flash-message";
+import { Formik } from "formik";
+
+
 import styles from "./BusinessSignInPage.style"
 import Input from "../../../components/Input/Input";
-import { Formik } from "formik";
 import Button from "../../../components/Button/Button";
 
-const BusinessSignInPage = () => {
+
+const BusinessSignInPage = ({ navigation }) => {
+
     const businessData = {
         email: "",
         password: "",
@@ -16,8 +23,39 @@ const BusinessSignInPage = () => {
         city: "",
         district: "",
         address: "",
-        phone_number: ""
+        phone_number: "",
     }
+
+
+
+    async function handleFormSubmit(formValues, {resetForm}) {
+        console.log(formValues)
+        try {
+            const userCredential = await auth().createUserWithEmailAndPassword(formValues.email, formValues.password)
+            const user = userCredential.user;
+
+            await firestore().collection("users").doc(user.uid).set({
+                email: formValues.email,
+                role: "business",
+                createdAt: firestore.FieldValue.serverTimestamp(),
+            })
+
+            showMessage({
+                message: "Kullanıcı Başarıyla Kaydedildi",
+                type: "success"
+            })
+            navigation.navigate("BusinessLoginPage")
+            resetForm();
+
+        } catch (error) {
+            console.error(error)
+            showMessage({
+                message: "Kullanıcı Kaydedilirken Bir Hata Oluştu!",
+                type: "danger"
+            })
+        }
+    }
+
 
     return (
         <View style={styles.conteiner}>
@@ -27,7 +65,7 @@ const BusinessSignInPage = () => {
 
             <View style={styles.input_conteiner}>
                 <Formik initialValues={businessData}
-                    onSubmit={null}
+                    onSubmit={handleFormSubmit}
                 >
                     {({ values, handleChange, handleSubmit }) => (
                         <>
@@ -39,7 +77,7 @@ const BusinessSignInPage = () => {
                             <Input
                                 placeholder="Parola.."
                                 onChange={handleChange("password")}
-                                value={values.password}/>
+                                value={values.password} />
 
                             <Input
                                 placeholder="İşletme Adı.."
@@ -70,7 +108,8 @@ const BusinessSignInPage = () => {
                             <Input
                                 placeholder="Randevu Telefon Numarası.."
                                 onChange={handleChange("phone_number")}
-                                value={values.phone_number} />
+                                value={values.phone_number}
+                                keyboardType="numeric" />
 
                             <View style={styles.button_conteiner}>
                                 <Button title="KAYDET" onPress={handleSubmit} />

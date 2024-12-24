@@ -5,14 +5,15 @@ import styles from "./Input.style"
 
 
 
-export default function({placeholder,multiline=false,onChange,value,secure=false}){
+export default function({placeholder,multiline=false,onChange,value,secure=false,keyboardType=null}){
     return(
         <View style={styles.conteiner}>
             <TextInput placeholder={placeholder} 
             multiline={multiline}
-            onChange={onChange}
+            onChangeText={onChange}
             value={value}
-            secureTextEntry={secure}/>
+            secureTextEntry={secure}
+            keyboardType={keyboardType}/>
         </View>
     )
 }
